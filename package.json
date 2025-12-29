@@ -1,9 +1,9 @@
 {
-  "name": "LibreKiosk",
+  "name": "libre-kiosk",
   "version": "1.0.0",
+  "license": "Apache-2.0",
   "main": "index.js",
   "electronMain": "electron-start.js",
-  "private": true,
   "scripts": {
     "start": "expo start",
     "android": "expo start --android --non-interactive",
