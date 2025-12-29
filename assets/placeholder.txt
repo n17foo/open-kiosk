@@ -1,0 +1,7 @@
+This directory contains application assets like images, fonts, and other static resources.
+
+Required assets:
+- icon.png
+- splash.png
+- adaptive-icon.png
+- favicon.png

@@ -1,0 +1,9 @@
+{
+  "common": {
+    "welcome": "Welcome to LibreKiosk",
+    "loading": "Loading..."
+  },
+  "home": {
+    "title": "Home"
+  }
+}
