@@ -35,7 +35,7 @@ const SplashScreen: React.FC = () => {
         // Fallback if no CMS service available
         setSplashData({
           backgroundImage: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80',
-          brandName: 'LibreKiosk',
+          brandName: 'OpenKiosk',
           brandIcon: '🛍️',
           title: 'Shop. Browse. Discover.',
           subtitle: 'Find what you\'re looking for with just a few taps',
@@ -55,7 +55,7 @@ const SplashScreen: React.FC = () => {
         // Use fallback data
         setSplashData({
           backgroundImage: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80',
-          brandName: 'LibreKiosk',
+          brandName: 'OpenKiosk',
           brandIcon: '🛍️',
           title: 'Shop. Browse. Discover.',
           subtitle: 'Find what you\'re looking for with just a few taps',

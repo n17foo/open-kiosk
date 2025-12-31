@@ -46,7 +46,7 @@ const SignInPromptScreen: React.FC = () => {
           <View style={styles.logoBadge}>
             <Text style={styles.logoIcon}>🍔</Text>
           </View>
-          <Text style={styles.brandName}>LibreKiosk</Text>
+          <Text style={styles.brandName}>OpenKiosk</Text>
         </View>
         <View style={styles.modeBadge}>
           <Text style={styles.modeIcon}>{modeIcon}</Text>

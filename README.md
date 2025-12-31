@@ -1,10 +1,10 @@
-# LibreKiosk
+# OpenKiosk
 
 A comprehensive retail kiosk application built with React Native and Electron, designed for modern retail environments with seamless e-commerce platform integration.
 
 ## 🎯 Project Purpose
 
-LibreKiosk is a full-featured retail kiosk solution that transforms traditional point-of-sale systems into interactive, self-service shopping experiences. The application enables customers to browse products, customize orders, and complete transactions independently while providing retailers with powerful management and analytics capabilities.
+OpenKiosk is a full-featured retail kiosk solution that transforms traditional point-of-sale systems into interactive, self-service shopping experiences. The application enables customers to browse products, customize orders, and complete transactions independently while providing retailers with powerful management and analytics capabilities.
 
 ### Key Features
 
@@ -18,7 +18,7 @@ LibreKiosk is a full-featured retail kiosk solution that transforms traditional 
 
 ## 🔗 Integration Capabilities
 
-LibreKiosk seamlessly integrates with major e-commerce platforms and payment processors, providing a unified retail experience across different backend systems.
+OpenKiosk seamlessly integrates with major e-commerce platforms and payment processors, providing a unified retail experience across different backend systems.
 
 ### E-Commerce Platform Integration
 
@@ -76,7 +76,7 @@ LibreKiosk seamlessly integrates with major e-commerce platforms and payment pro
 
 ### Architecture Overview
 
-LibreKiosk follows a modular, service-oriented architecture designed for scalability, maintainability, and cross-platform compatibility.
+OpenKiosk follows a modular, service-oriented architecture designed for scalability, maintainability, and cross-platform compatibility.
 
 #### Core Architecture Principles
 
@@ -223,7 +223,7 @@ src/
 - **Feature Flags**: Gradual feature rollout capabilities
 - **Configuration Management**: Runtime configuration updates
 
-This technical approach ensures LibreKiosk remains maintainable, scalable, and adaptable to evolving retail technology requirements while providing a superior user experience across all deployment platforms.
+This technical approach ensures OpenKiosk remains maintainable, scalable, and adaptable to evolving retail technology requirements while providing a superior user experience across all deployment platforms.
 
 ## Getting Started
 

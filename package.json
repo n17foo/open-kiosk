@@ -1,5 +1,5 @@
 {
-  "name": "libre-kiosk",
+  "name": "open-kiosk",
   "version": "1.0.0",
   "license": "Apache-2.0",
   "main": "index.js",
@@ -69,8 +69,8 @@
     "wait-on": "^9.0.3"
   },
   "build": {
-    "appId": "com.commercefull.LibreKiosk",
-    "productName": "LibreKiosk",
+    "appId": "com.commercefull.OpenKiosk",
+    "productName": "OpenKiosk",
     "files": [
       "build/**/*",
       "node_modules/**/*",

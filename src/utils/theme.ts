@@ -1,4 +1,4 @@
-// Global theme configuration for LibreKiosk application
+// Global theme configuration for OpenKiosk application
 
 // Colors
 export const colors = {
