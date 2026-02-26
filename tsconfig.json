@@ -4,21 +4,28 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "jsx": "react-native",
-    "lib": [
-      "dom",
-      "esnext"
-    ],
+    "lib": ["dom", "esnext"],
     "moduleResolution": "bundler",
     "noEmit": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "target": "esnext"
   },
-  "extends": "expo/tsconfig.base",
+  "extends": "expo/tsconfig.base.json",
   "include": [
     "./App.tsx",
     "./src/**/*",
     "./navigation/**/*",
-    "./types/**/*"
+    "./types/**/*",
+    "./utils/**/*",
+    "./services/**/*",
+    "./repositories/**/*",
+    "./contexts/**/*",
+    "./context/**/*",
+    "./hooks/**/*",
+    "./components/**/*",
+    "./screens/**/*",
+    "./locales/**/*",
+    "./__tests__/**/*"
   ]
 }

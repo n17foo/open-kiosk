@@ -1,0 +1,40 @@
+{
+  "common": {
+    "welcome": "Welcome to OpenKiosk",
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "error": "Error",
+    "success": "Success",
+    "retry": "Retry"
+  },
+  "home": {
+    "title": "Home"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "enterPin": "Enter your PIN",
+    "invalidPin": "Invalid PIN"
+  },
+  "basket": {
+    "title": "Basket",
+    "empty": "Your basket is empty",
+    "total": "Total",
+    "checkout": "Checkout"
+  },
+  "products": {
+    "title": "Products",
+    "search": "Search products",
+    "noResults": "No products found"
+  },
+  "kiosk": {
+    "tapToStart": "Tap to start",
+    "sessionTimeout": "Session timed out"
+  }
+}

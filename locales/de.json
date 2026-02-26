@@ -1,0 +1,40 @@
+{
+  "common": {
+    "welcome": "Willkommen bei OpenKiosk",
+    "loading": "Laden...",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "done": "Fertig",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "retry": "Erneut versuchen"
+  },
+  "home": {
+    "title": "Startseite"
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signOut": "Abmelden",
+    "enterPin": "PIN eingeben",
+    "invalidPin": "Ungültige PIN"
+  },
+  "basket": {
+    "title": "Warenkorb",
+    "empty": "Ihr Warenkorb ist leer",
+    "total": "Gesamt",
+    "checkout": "Zur Kasse"
+  },
+  "products": {
+    "title": "Produkte",
+    "search": "Produkte suchen",
+    "noResults": "Keine Produkte gefunden"
+  },
+  "kiosk": {
+    "tapToStart": "Tippen Sie zum Starten",
+    "sessionTimeout": "Sitzung abgelaufen"
+  }
+}

@@ -1,9 +1,0 @@
-{
-  "common": {
-    "welcome": "Welcome to OpenKiosk",
-    "loading": "Loading..."
-  },
-  "home": {
-    "title": "Home"
-  }
-}
