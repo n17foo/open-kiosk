@@ -1,4 +1,7 @@
 import type { ProductService, Product } from '../interfaces';
+import { LoggerFactory } from '../logger/LoggerFactory';
+
+const logger = LoggerFactory.getInstance().createLogger('WooCommerceProductService');
 
 interface WooCommerceProduct {
   id: number;
@@ -40,7 +43,7 @@ export class WooCommerceProductService implements ProductService {
         image: product.images[0]?.src,
       };
     } catch (error) {
-      console.error('Failed to fetch WooCommerce product:', error);
+      logger.error({ message: 'Failed to fetch WooCommerce product' }, error instanceof Error ? error : new Error(String(error)));
       return undefined;
     }
   }
@@ -57,7 +60,7 @@ export class WooCommerceProductService implements ProductService {
       }
       return products;
     } catch (error) {
-      console.error('Failed to fetch WooCommerce products by IDs:', error);
+      logger.error({ message: 'Failed to fetch WooCommerce products by IDs' }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -80,7 +83,10 @@ export class WooCommerceProductService implements ProductService {
         image: variation.images[0]?.src,
       }));
     } catch (error) {
-      console.error('Failed to fetch WooCommerce product variations:', error);
+      logger.error(
+        { message: 'Failed to fetch WooCommerce product variations' },
+        error instanceof Error ? error : new Error(String(error))
+      );
       return [];
     }
   }
@@ -123,7 +129,10 @@ export class WooCommerceProductService implements ProductService {
 
       return [];
     } catch (error) {
-      console.error('Failed to fetch WooCommerce upsell recommendations:', error);
+      logger.error(
+        { message: 'Failed to fetch WooCommerce upsell recommendations' },
+        error instanceof Error ? error : new Error(String(error))
+      );
       return [];
     }
   }

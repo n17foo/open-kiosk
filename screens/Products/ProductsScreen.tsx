@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Modal, useWindowDimensions } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -12,13 +12,15 @@ import { createStyles, palette } from '../../theme/styles';
 import { formatMoney } from '../../services/utils';
 import { SearchBar, CategorySidebar } from '../../components';
 import BasketFAB from '../../components/ui/BasketFAB';
+import { useLogger } from '../../hooks/useLogger';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SIDEBAR_WIDTH = 220;
 
 const ProductsScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<KioskFlowParamList>>();
   const route = useRoute<RouteProp<KioskFlowParamList, 'Products'>>();
+  const logger = useLogger('ProductsScreen');
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
   const { categories, products, isLoading, variantGroups } = useCatalog();
   const { basket, addItem } = useBasket();
   const { service: platform } = usePlatform();
@@ -93,19 +95,21 @@ const ProductsScreen: React.FC = () => {
           const results = await platform.catalog.searchProducts(query);
           setSearchResults(results);
         } catch (error) {
-          void error;
+          logger.error({ message: 'Search failed' }, error instanceof Error ? error : new Error(String(error)));
           setSearchResults([]);
         } finally {
           setIsSearching(false);
         }
       }
     },
-    [platform]
+    [platform, logger]
   );
 
   const basketItemCount = useMemo(() => {
     return basket.lines.reduce((sum, line) => sum + line.qty, 0);
   }, [basket.lines]);
+
+  const cardWidth = (SCREEN_WIDTH - SIDEBAR_WIDTH - 48 - 16) / 3;
 
   const handleProductPress = useCallback((product: Product) => {
     setSelectedProduct(product);
@@ -268,7 +272,7 @@ const ProductsScreen: React.FC = () => {
               {subcategories.map(subcategory => (
                 <TouchableOpacity
                   key={subcategory.id}
-                  style={styles.productCard}
+                  style={[styles.productCard, { width: cardWidth }]}
                   onPress={() => {
                     setSelectedCategoryId(subcategory.id);
                     setSearchQuery('');
@@ -302,7 +306,7 @@ const ProductsScreen: React.FC = () => {
               {filteredProducts.map(product => (
                 <TouchableOpacity
                   key={product.id}
-                  style={styles.productCard}
+                  style={[styles.productCard, { width: cardWidth }]}
                   onPress={() => handleProductPress(product)}
                   activeOpacity={0.9}
                 >
@@ -528,7 +532,6 @@ const styles = createStyles(t => ({
     paddingBottom: t.spacing.xxl,
   },
   productCard: {
-    width: (SCREEN_WIDTH - SIDEBAR_WIDTH - t.spacing.xl * 2 - t.spacing.lg * 2) / 3,
     backgroundColor: t.colors.surface,
     borderRadius: t.radius.xl,
     overflow: 'hidden',

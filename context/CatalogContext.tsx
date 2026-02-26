@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { VariantGroup, KioskCatalog, Product, UpgradeOffer } from '../services/types';
 import { usePlatform } from './PlatformContext';
 
@@ -25,7 +25,7 @@ const CatalogProviderInner: React.FC<{ children: React.ReactNode }> = ({ childre
   const [catalog, setCatalog] = useState<KioskCatalog>(initialCatalog);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadCatalog = async () => {
+  const loadCatalog = useCallback(async () => {
     if (!service) return;
 
     setIsLoading(true);
@@ -35,11 +35,11 @@ const CatalogProviderInner: React.FC<{ children: React.ReactNode }> = ({ childre
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [service]);
 
   useEffect(() => {
     void loadCatalog();
-  }, [service]);
+  }, [loadCatalog]);
 
   const value = useMemo<CatalogContextValue>(
     () => ({
@@ -50,7 +50,7 @@ const CatalogProviderInner: React.FC<{ children: React.ReactNode }> = ({ childre
       getUpgradeById: (id: string) => catalog.upgradeOffers.find(offer => offer.id === id),
       getVariantGroupById: (id: string) => catalog.variantGroups.find(group => group.id === id),
     }),
-    [catalog, isLoading]
+    [catalog, isLoading, loadCatalog]
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

@@ -2,13 +2,11 @@ import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { I18nextProvider } from 'react-i18next';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import i18n from './locales/i18n';
 import { LoggerFactory } from './services/logger/LoggerFactory';
-
-const logger = LoggerFactory.getInstance().createLogger('App');
 
 // Navigation
 import RootNavigator from './navigation/RootNavigator';
@@ -27,6 +25,12 @@ import { OnboardingProvider } from './contexts/OnboardingProvider';
 import { AuthProvider } from './contexts/AuthProvider';
 import { SettingsProvider } from './contexts/SettingsProvider';
 
+const logger = LoggerFactory.getInstance().createLogger('App');
+
+const appStyles = StyleSheet.create({
+  root: { flex: 1 },
+});
+
 export default function App() {
   useEffect(() => {
     const isElectron = Platform.OS === 'web' && navigator.userAgent.includes('Electron');
@@ -36,7 +40,7 @@ export default function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={appStyles.root}>
       <ErrorBoundary>
         <SafeAreaProvider>
           <I18nextProvider i18n={i18n}>

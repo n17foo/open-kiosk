@@ -1,4 +1,7 @@
 import type { CmsService, SplashScreenData } from './interfaces';
+import { LoggerFactory } from './logger/LoggerFactory';
+
+const logger = LoggerFactory.getInstance().createLogger('CmsService');
 
 export class GenericCmsService implements CmsService {
   private baseUrl: string;
@@ -47,8 +50,7 @@ export class GenericCmsService implements CmsService {
         secondaryColor: data.secondaryColor,
       };
     } catch (error) {
-      console.error('Failed to fetch splash screen data:', error);
-      // Return fallback data if CMS is unavailable
+      logger.error({ message: 'Failed to fetch splash screen data' }, error instanceof Error ? error : new Error(String(error)));
       return this.getFallbackSplashData();
     }
   }

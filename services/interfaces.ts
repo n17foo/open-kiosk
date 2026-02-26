@@ -64,12 +64,24 @@ export interface CheckoutData {
   expiresAt?: Date;
 }
 
+export type OrderStatusPhase = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'completed' | 'cancelled' | 'refunded' | 'error';
+
+export interface OrderStatus {
+  orderId: string;
+  phase: OrderStatusPhase;
+  displayMessage: string;
+  updatedAt: Date;
+  estimatedReadyAt?: Date;
+  metadata?: Record<string, unknown>;
+}
+
 export interface CheckoutService {
-  createCheckout(basket: Basket): Promise<string>; // Returns checkout URL or ID
-  getCheckoutData(checkoutId: string): Promise<CheckoutData>; // Get checkout with payment methods
-  getCheckoutStatus(checkoutId: string): Promise<any>;
-  processPayment(checkoutId: string, paymentData: any): Promise<any>;
-  confirmOrder(orderId: string): Promise<any>;
+  createCheckout(basket: Basket): Promise<string>;
+  getCheckoutData(checkoutId: string): Promise<CheckoutData>;
+  getCheckoutStatus(checkoutId: string): Promise<Record<string, unknown>>;
+  processPayment(checkoutId: string, paymentData: Record<string, unknown>): Promise<Record<string, unknown>>;
+  confirmOrder(orderId: string): Promise<Record<string, unknown>>;
+  getOrderStatus?(orderId: string): Promise<OrderStatus>;
 }
 
 export interface UpsellService {
@@ -90,6 +102,8 @@ export interface KioskService {
   readonly crossSell: CrossSellService;
   readonly cms: CmsService;
   readonly checkout: CheckoutService;
+
+  readonly upsell?: UpsellService;
 
   // Initialization
   initialize(): Promise<void>;

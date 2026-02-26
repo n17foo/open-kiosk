@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Animated, Easing, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -26,6 +26,25 @@ const PaymentScreen: React.FC = () => {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
+  const startPulseAnimation = useCallback(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [pulseAnim]);
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -43,26 +62,7 @@ const PaymentScreen: React.FC = () => {
 
     // Start pulsing animation for payment terminal indicator
     startPulseAnimation();
-  }, [fadeAnim, scaleAnim]);
-
-  const startPulseAnimation = () => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.2,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  };
+  }, [fadeAnim, scaleAnim, startPulseAnimation]);
 
   const handlePaymentComplete = async (success: boolean, transactionId?: string, error?: string) => {
     setIsProcessing(true);
@@ -73,12 +73,16 @@ const PaymentScreen: React.FC = () => {
       navTimerRef.current = setTimeout(() => {
         navigation.navigate('Confirmation', {
           orderId: draftOrderId || `ORD-${Date.now()}`,
-          paymentResult: {
-            method: selectedPaymentMethod!,
-            amount: basket.total,
-            currency: basket.total.currency,
-            transactionId,
-          },
+          ...(selectedPaymentMethod
+            ? {
+                paymentResult: {
+                  method: selectedPaymentMethod,
+                  amount: basket.total,
+                  currency: basket.total.currency,
+                  transactionId,
+                },
+              }
+            : {}),
           customerName: customerName || 'Kiosk Customer',
           customerEmail: customerEmail,
         });

@@ -1,6 +1,6 @@
 export interface Money {
   amount: number;
-  currency: 'GBP';
+  currency: string;
 }
 
 export interface Category {
@@ -94,7 +94,7 @@ export interface PlatformConfig {
   clientSecret?: string;
   username?: string;
   password?: string;
-  customConfig?: Record<string, any>;
+  customConfig?: Record<string, unknown>;
 
   // Payment processor configuration
   paymentProcessor?: {

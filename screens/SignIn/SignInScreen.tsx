@@ -4,26 +4,31 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { Screen } from '../../components/Screen';
 import { KioskButton } from '../../components/KioskButton';
-import { useAuth } from '../../hooks';
+import { authService } from '../../services/auth/AuthService';
 import type { RootStackParamList } from '../../navigation/types';
 import { createStyles } from '../../theme/styles';
 
 const SignInScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { login, isLoading, error } = useAuth();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [pin, setPin] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    if (!username || !password) {
-      return;
-    }
-
+    if (!pin.trim()) return;
+    setIsLoading(true);
+    setError(null);
     try {
-      await login(username, password);
-      navigation.goBack();
+      const result = await authService.authenticate('kiosk_pin', pin);
+      if (result.success) {
+        navigation.goBack();
+      } else {
+        setError(result.error ?? 'Incorrect PIN');
+      }
     } catch {
-      // Error is handled by the hook
+      setError('Authentication failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -36,41 +41,25 @@ const SignInScreen: React.FC = () => {
       <Screen scrollable containerProps={{ contentInsetAdjustmentBehavior: 'never' }}>
         <KeyboardAvoidingView style={styles.wrapper} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.header}>
-            <Text style={styles.title}>Sign in to continue</Text>
-            <Text style={styles.subtitle}>
-              Enter your kiosk account details to access saved favourites, loyalty benefits, and faster checkout.
-            </Text>
+            <Text style={styles.title}>Staff Sign-in</Text>
+            <Text style={styles.subtitle}>Enter your admin PIN to access kiosk configuration. Guest customers do not need to sign in.</Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Username</Text>
+              <Text style={styles.label}>Admin PIN</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter username"
+                placeholder="Enter PIN"
                 placeholderTextColor="rgba(0,0,0,0.4)"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                autoComplete="username"
-                keyboardAppearance="light"
-                returnKeyType="next"
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter password"
-                placeholderTextColor="rgba(0,0,0,0.4)"
-                value={password}
-                onChangeText={setPassword}
+                value={pin}
+                onChangeText={setPin}
                 secureTextEntry
-                autoComplete="password"
+                keyboardType="number-pad"
                 keyboardAppearance="light"
                 returnKeyType="done"
                 onSubmitEditing={handleSubmit}
+                accessibilityLabel="Admin PIN"
               />
             </View>
 
@@ -80,7 +69,7 @@ const SignInScreen: React.FC = () => {
           <View style={styles.actions}>
             <KioskButton label="Cancel" variant="ghost" onPress={handleCancel} disabled={isLoading} />
             <View style={styles.actionSpacing} />
-            <KioskButton label="Sign in" onPress={handleSubmit} loading={isLoading} />
+            <KioskButton label="Sign in" onPress={handleSubmit} loading={isLoading} disabled={!pin.trim()} />
           </View>
         </KeyboardAvoidingView>
       </Screen>

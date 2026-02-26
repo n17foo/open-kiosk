@@ -1,4 +1,7 @@
 import type { CatalogService, Category, KioskCatalog, Product } from '../interfaces';
+import { LoggerFactory } from '../logger/LoggerFactory';
+
+const logger = LoggerFactory.getInstance().createLogger('ShopifyCatalogService');
 
 interface ShopifyCollection {
   id: string;
@@ -62,7 +65,7 @@ export class ShopifyCatalogService implements CatalogService {
         image: collection.image?.url,
       }));
     } catch (error) {
-      console.error('Failed to fetch Shopify collections:', error);
+      logger.error({ message: 'Failed to fetch Shopify collections' }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -125,12 +128,12 @@ export class ShopifyCatalogService implements CatalogService {
         description: product.description,
         price: {
           amount: Math.round(parseFloat(product.variants.edges[0]?.node.price.amount || '0') * 100),
-          currency: product.variants.edges[0]?.node.price.currencyCode === 'GBP' ? 'GBP' : 'GBP',
+          currency: product.variants.edges[0]?.node.price.currencyCode || 'GBP',
         },
         image: product.images.edges[0]?.node.url,
       }));
     } catch (error) {
-      console.error('Failed to fetch Shopify products:', error);
+      logger.error({ message: 'Failed to fetch Shopify products' }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }

@@ -15,6 +15,7 @@ import { MagentoProductService } from './MagentoProductService';
 import { MagentoCrossSellService } from './MagentoCrossSellService';
 import { MagentoCheckoutService } from './MagentoCheckoutService';
 import { GenericCmsService } from '../cms';
+import { BaseApiClient } from '../utils/BaseApiClient';
 
 export class MagentoKioskService implements KioskService {
   readonly config: PlatformConfig;
@@ -26,6 +27,8 @@ export class MagentoKioskService implements KioskService {
   readonly crossSell: CrossSellService;
   readonly cms: CmsService;
   readonly checkout: CheckoutService;
+
+  readonly apiClient: BaseApiClient;
 
   private baseUrl: string;
   private accessToken: string;
@@ -39,6 +42,14 @@ export class MagentoKioskService implements KioskService {
 
     this.baseUrl = config.baseUrl;
     this.accessToken = config.accessToken;
+
+    this.apiClient = new BaseApiClient({
+      baseUrl: `${this.baseUrl}/rest/V1`,
+      defaultHeaders: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.accessToken}`,
+      },
+    });
 
     // Initialize service components
     this.auth = new MagentoAuthService(this.baseUrl, this.accessToken);

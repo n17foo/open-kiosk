@@ -1,5 +1,10 @@
-import type { CheckoutService, CheckoutData, Basket } from '../interfaces';
+import type { CheckoutService, CheckoutData, Basket, PlatformConfig, OrderStatus } from '../interfaces';
+import { buildOrderStatus, buildErrorOrderStatus } from '../utils/orderStatusHelpers';
 import { PaymentServiceFactory } from '../payment';
+import type { PaymentMethod } from '../payment';
+import { LoggerFactory } from '../logger/LoggerFactory';
+
+const logger = LoggerFactory.getInstance().createLogger('MagentoCheckoutService');
 
 interface MagentoCart {
   id: string;
@@ -44,13 +49,13 @@ export class MagentoCheckoutService implements CheckoutService {
   constructor(
     private baseUrl: string,
     private accessToken: string,
-    private platformConfig?: any
+    private platformConfig?: PlatformConfig
   ) {}
 
   async createCheckout(basket: Basket): Promise<string> {
     try {
       // Create a guest cart
-      const cartResponse = await this.makeRequest('guest-carts', { method: 'POST' });
+      const cartResponse = (await this.makeRequest('guest-carts', { method: 'POST' })) as string;
       const cartId = cartResponse;
 
       this.cartId = cartId;
@@ -69,9 +74,9 @@ export class MagentoCheckoutService implements CheckoutService {
         });
       }
 
-      return cartId;
+      return cartId as string;
     } catch (error) {
-      console.error('Failed to create Magento cart:', error);
+      logger.error({ message: 'Failed to create Magento cart' }, error instanceof Error ? error : new Error(String(error)));
       throw new Error('Failed to create checkout');
     }
   }
@@ -79,11 +84,11 @@ export class MagentoCheckoutService implements CheckoutService {
   async getCheckoutData(checkoutId: string): Promise<CheckoutData> {
     try {
       // Get cart totals
-      const totalsResponse = await this.makeRequest(`guest-carts/${checkoutId}/totals`);
-      const totals: MagentoCart['totals'] = totalsResponse;
+      const totalsResponse = (await this.makeRequest(`guest-carts/${checkoutId}/totals`)) as MagentoCart['totals'];
+      const totals = totalsResponse;
 
       // Get available payment methods based on platform config
-      let paymentMethods: any[] = [{ type: 'cash', label: 'Cash Payment', icon: '💵' }]; // Default fallback
+      let paymentMethods: PaymentMethod[] = [{ type: 'cash', label: 'Cash Payment', icon: '💵' }];
 
       if (this.platformConfig?.paymentProcessor) {
         const paymentService = PaymentServiceFactory.createService(
@@ -101,15 +106,15 @@ export class MagentoCheckoutService implements CheckoutService {
         expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes from now
       };
     } catch (error) {
-      console.error('Failed to get Magento checkout data:', error);
+      logger.error({ message: 'Failed to get Magento checkout data' }, error instanceof Error ? error : new Error(String(error)));
       throw new Error('Failed to get checkout data');
     }
   }
 
-  async getCheckoutStatus(checkoutId: string): Promise<any> {
+  async getCheckoutStatus(checkoutId: string): Promise<Record<string, unknown>> {
     try {
-      const response = await this.makeRequest(`guest-carts/${checkoutId}/totals`);
-      const totals: MagentoCart['totals'] = response;
+      const response = (await this.makeRequest(`guest-carts/${checkoutId}/totals`)) as MagentoCart['totals'];
+      const totals = response;
 
       return {
         id: checkoutId,
@@ -120,19 +125,19 @@ export class MagentoCheckoutService implements CheckoutService {
         tax: totals.taxes?.reduce((sum, tax) => sum + tax.amount, 0) || 0,
       };
     } catch (error) {
-      console.error('Failed to get Magento cart status:', error);
+      logger.error({ message: 'Failed to get Magento cart status' }, error instanceof Error ? error : new Error(String(error)));
       return { status: 'unknown' };
     }
   }
 
-  async processPayment(checkoutId: string, paymentData: any): Promise<any> {
+  async processPayment(checkoutId: string, paymentData: Record<string, unknown>): Promise<Record<string, unknown>> {
     try {
       // Set payment method
       await this.makeRequest(`guest-carts/${checkoutId}/payment-information`, {
         method: 'POST',
         body: JSON.stringify({
           paymentMethod: {
-            method: paymentData.method || 'cashondelivery',
+            method: (paymentData.method as string) || 'cashondelivery',
           },
           billing_address: {
             email: 'kiosk@example.com',
@@ -152,12 +157,12 @@ export class MagentoCheckoutService implements CheckoutService {
         method: 'POST',
         body: JSON.stringify({
           paymentMethod: {
-            method: paymentData.method || 'cashondelivery',
+            method: (paymentData.method as string) || 'cashondelivery',
           },
         }),
       });
 
-      const order: MagentoOrder = orderResponse;
+      const order = orderResponse as MagentoOrder;
 
       return {
         id: order.increment_id,
@@ -165,16 +170,16 @@ export class MagentoCheckoutService implements CheckoutService {
         total: order.grand_total,
       };
     } catch (error) {
-      console.error('Failed to process Magento payment:', error);
+      logger.error({ message: 'Failed to process Magento payment' }, error instanceof Error ? error : new Error(String(error)));
       throw new Error('Payment processing failed');
     }
   }
 
-  async confirmOrder(orderId: string): Promise<any> {
+  async confirmOrder(orderId: string): Promise<Record<string, unknown>> {
     try {
       // Magento orders are confirmed upon creation, but we can check status
-      const response = await this.makeRequest(`orders/${orderId}`);
-      const order: MagentoOrder = response;
+      const response = (await this.makeRequest(`orders/${orderId}`)) as MagentoOrder;
+      const order = response;
 
       return {
         id: order.increment_id,
@@ -182,12 +187,33 @@ export class MagentoCheckoutService implements CheckoutService {
         total: order.grand_total,
       };
     } catch (error) {
-      console.error('Failed to confirm Magento order:', error);
+      logger.error({ message: 'Failed to confirm Magento order' }, error instanceof Error ? error : new Error(String(error)));
       return { id: orderId, status: 'error' };
     }
   }
 
-  private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
+  async getOrderStatus(orderId: string): Promise<OrderStatus> {
+    try {
+      const response = (await this.makeRequest(`orders/${orderId}`)) as MagentoOrder;
+      const status = response.status ?? 'pending';
+      const phaseMap: Record<string, OrderStatus['phase']> = {
+        pending: 'pending',
+        pending_payment: 'pending',
+        processing: 'confirmed',
+        holded: 'pending',
+        complete: 'completed',
+        closed: 'completed',
+        canceled: 'cancelled',
+        fraud: 'error',
+      };
+      return buildOrderStatus(orderId, phaseMap[status] ?? 'confirmed', response.created_at);
+    } catch (error) {
+      logger.error({ message: 'Failed to get Magento order status' }, error instanceof Error ? error : new Error(String(error)));
+      return buildErrorOrderStatus(orderId);
+    }
+  }
+
+  private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<unknown> {
     const url = `${this.baseUrl}/rest/V1/${endpoint}`;
     const response = await fetch(url, {
       ...options,

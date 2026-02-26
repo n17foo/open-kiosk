@@ -6,11 +6,13 @@ import type { KioskFlowParamList } from '../../navigation/types';
 import { usePlatform } from '../../context/PlatformContext';
 import type { SplashScreenData } from '../../services/types';
 import { createStyles, palette } from '../../theme/styles';
+import { useLogger } from '../../hooks/useLogger';
 
 const { width, height } = Dimensions.get('window');
 
 const SplashScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<KioskFlowParamList>>();
+  const logger = useLogger('SplashScreen');
   const { service: platformService } = usePlatform();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -40,7 +42,7 @@ const SplashScreen: React.FC = () => {
         const data = await platformService.cms.getSplashScreenData();
         setSplashData(data);
       } catch (err) {
-        void err;
+        logger.error({ message: 'Failed to load splash data, using fallback' }, err instanceof Error ? err : new Error(String(err)));
         // Use fallback data
         setSplashData({
           backgroundImage: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80',
@@ -57,7 +59,7 @@ const SplashScreen: React.FC = () => {
     };
 
     fetchSplashData();
-  }, [platformService]);
+  }, [platformService, logger]);
 
   useEffect(() => {
     if (!isLoading && splashData) {

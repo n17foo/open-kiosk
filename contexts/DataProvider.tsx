@@ -51,6 +51,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   return <>{children}</>;
 };
 
+const ERROR_COLOR = '#B00020';
+const MUTED_COLOR = '#666666';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -61,12 +64,12 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#B00020',
+    color: ERROR_COLOR,
     marginBottom: 8,
   },
   errorDetail: {
     fontSize: 14,
-    color: '#666',
+    color: MUTED_COLOR,
     textAlign: 'center',
   },
 });

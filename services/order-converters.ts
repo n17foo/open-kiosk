@@ -180,12 +180,11 @@ export class BasketEnricher {
   /**
    * Enrich basket lines with platform-specific data needed for order conversion
    */
-  static enrichBasketForOrder(basket: Basket, platformType: PlatformType, productLookup: (productId: string) => any): Basket {
+  static enrichBasketForOrder(basket: Basket, platformType: PlatformType, productLookup: (productId: string) => unknown): Basket {
     const enrichedLines = basket.lines.map(line => {
-      const productData = productLookup(line.productId);
+      const productData = productLookup(line.productId) as Record<string, Record<string, unknown>> | null | undefined;
       if (!productData) return line;
 
-      // Add platform-specific data to line for order conversion
       return {
         ...line,
         platformData: {

@@ -1,4 +1,7 @@
 import type { CrossSellService, Product, Basket } from '../interfaces';
+import { LoggerFactory } from '../logger/LoggerFactory';
+
+const logger = LoggerFactory.getInstance().createLogger('MagentoCrossSellService');
 
 interface MagentoProduct {
   id: number;
@@ -73,7 +76,10 @@ export class MagentoCrossSellService implements CrossSellService {
               image: this.getProductImage(mgProduct),
             });
           } catch (error) {
-            console.error(`Failed to fetch cross-sell product ${crossSell.sku}:`, error);
+            logger.error(
+              { message: `Failed to fetch cross-sell product ${crossSell.sku}` },
+              error instanceof Error ? error : new Error(String(error))
+            );
           }
         }
 
@@ -101,7 +107,10 @@ export class MagentoCrossSellService implements CrossSellService {
               image: this.getProductImage(mgProduct),
             });
           } catch (error) {
-            console.error(`Failed to fetch related product ${relatedProduct.sku}:`, error);
+            logger.error(
+              { message: `Failed to fetch related product ${relatedProduct.sku}` },
+              error instanceof Error ? error : new Error(String(error))
+            );
           }
         }
 
@@ -110,7 +119,7 @@ export class MagentoCrossSellService implements CrossSellService {
 
       return [];
     } catch (error) {
-      console.error('Failed to fetch Magento cross-sell products:', error);
+      logger.error({ message: 'Failed to fetch Magento cross-sell products' }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }

@@ -1,41 +1,68 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, TextInput, ScrollView, Alert } from 'react-native';
 import { useOnboarding } from '../../contexts/OnboardingProvider';
-import { ECommercePlatform, PLATFORM_DISPLAY_NAMES } from '../../utils/platforms';
+import { ECommercePlatform, PLATFORM_DISPLAY_NAMES, isOnlinePlatform } from '../../utils/platforms';
 import { useLogger } from '../../hooks/useLogger';
 import { lightColors, spacing, typographyPresets, borderRadius } from '../../utils/theme';
 
-const PLATFORMS = Object.values(ECommercePlatform);
+// Platforms supported by ServiceFactory — BigCommerce, Sylius etc. have no implementation yet
+const SUPPORTED_PLATFORMS = [
+  ECommercePlatform.SHOPIFY,
+  ECommercePlatform.WOOCOMMERCE,
+  ECommercePlatform.MAGENTO,
+  ECommercePlatform.OFFLINE,
+];
 
 const OnboardingScreen: React.FC = () => {
   const logger = useLogger('OnboardingScreen');
-  const { currentStep, totalSteps, nextStep, prevStep, setIsOnboarded, selectedPlatform, setSelectedPlatform } = useOnboarding();
+  const { currentStep, totalSteps, nextStep, prevStep, complete, selectedPlatform, setSelectedPlatform, credentials, setCredentials } =
+    useOnboarding();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const needsCredentials = selectedPlatform ? isOnlinePlatform(selectedPlatform) : false;
+  // Effective visible steps: online = 3, offline = 2 (credentials skipped)
+  const visibleSteps = needsCredentials ? totalSteps : totalSteps - 1;
+  const visibleStep = currentStep > 1 ? currentStep - 1 : currentStep; // collapse hidden step
+  const displayStep = Math.min(visibleStep + 1, visibleSteps);
 
   const handleComplete = async () => {
+    setIsSubmitting(true);
     try {
-      await setIsOnboarded(true);
-      logger.info('Onboarding completed');
+      await complete();
     } catch (err) {
-      logger.error({ message: 'Failed to complete onboarding' }, err instanceof Error ? err : new Error(String(err)));
+      Alert.alert('Setup failed', err instanceof Error ? err.message : 'Please try again.');
+      logger.error({ message: 'Onboarding complete failed' }, err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const canAdvanceFromStep1 = currentStep === 1 && selectedPlatform !== null;
+  const canAdvanceFromStep2 =
+    currentStep === 2 && (!needsCredentials || (credentials.baseUrl.trim().length > 0 && credentials.apiKey.trim().length > 0));
+
+  const isLastStep = needsCredentials ? currentStep === totalSteps - 1 : currentStep === 1;
 
   const renderStep = () => {
     switch (currentStep) {
       case 0:
         return (
           <View style={styles.stepContainer}>
+            <Text style={styles.emoji}>🛍️</Text>
             <Text style={styles.heading}>Welcome to OpenKiosk</Text>
-            <Text style={styles.body}>Set up your self-service kiosk in a few simple steps.</Text>
+            <Text style={styles.body}>
+              Set up your self-service kiosk in a few steps. Guest customers can browse and purchase without ever signing in.
+            </Text>
           </View>
         );
+
       case 1:
         return (
           <View style={styles.stepContainer}>
-            <Text style={styles.heading}>Select Platform</Text>
-            <Text style={styles.body}>Choose your e-commerce platform or use offline mode.</Text>
+            <Text style={styles.heading}>Choose Your Platform</Text>
+            <Text style={styles.body}>Connect to your store or run in offline demo mode.</Text>
             <View style={styles.platformList}>
-              {PLATFORMS.map(platform => (
+              {SUPPORTED_PLATFORMS.map(platform => (
                 <TouchableOpacity
                   key={platform}
                   style={[styles.platformOption, selectedPlatform === platform && styles.platformSelected]}
@@ -47,35 +74,72 @@ const OnboardingScreen: React.FC = () => {
                   <Text style={[styles.platformText, selectedPlatform === platform && styles.platformTextSelected]}>
                     {PLATFORM_DISPLAY_NAMES[platform]}
                   </Text>
+                  {platform === ECommercePlatform.OFFLINE && (
+                    <Text style={styles.platformSubtext}>Uses demo data — no internet required</Text>
+                  )}
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         );
-      default:
+
+      case 2:
         return (
           <View style={styles.stepContainer}>
-            <Text style={styles.heading}>Step {currentStep + 1}</Text>
-            <Text style={styles.body}>This step will be configured during development.</Text>
+            <Text style={styles.heading}>{PLATFORM_DISPLAY_NAMES[selectedPlatform!]} Credentials</Text>
+            <Text style={styles.body}>Enter your store URL and API key. These are stored locally on this device only.</Text>
+            <View style={styles.form}>
+              <Text style={styles.label}>Store URL</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="https://your-store.myshopify.com"
+                value={credentials.baseUrl}
+                onChangeText={text => setCredentials({ baseUrl: text.trim() })}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                accessibilityLabel="Store URL"
+              />
+              <Text style={styles.label}>API Key</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Your platform API key"
+                value={credentials.apiKey}
+                onChangeText={text => setCredentials({ apiKey: text.trim() })}
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry
+                accessibilityLabel="API Key"
+              />
+              <Text style={styles.hint}>
+                The kiosk uses read-only access to fetch your product catalogue. No customer data is stored on the platform during guest
+                checkout.
+              </Text>
+            </View>
           </View>
         );
+
+      default:
+        return null;
     }
   };
 
-  const isLastStep = currentStep === totalSteps - 1;
+  const canContinue = currentStep === 0 || canAdvanceFromStep1 || canAdvanceFromStep2 || isLastStep;
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.progressContainer}>
         <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${((currentStep + 1) / totalSteps) * 100}%` }]} />
+          <View style={[styles.progressFill, { width: `${(displayStep / visibleSteps) * 100}%` }]} />
         </View>
         <Text style={styles.progressText}>
-          {currentStep + 1} / {totalSteps}
+          {displayStep} / {visibleSteps}
         </Text>
       </View>
 
-      <View style={styles.content}>{renderStep()}</View>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {renderStep()}
+      </ScrollView>
 
       <View style={styles.buttonRow}>
         {currentStep > 0 && (
@@ -86,27 +150,24 @@ const OnboardingScreen: React.FC = () => {
         <View style={styles.spacer} />
         {isLastStep ? (
           <TouchableOpacity
-            style={styles.primaryButton}
+            style={[styles.primaryButton, (!canContinue || isSubmitting) && styles.primaryButtonDisabled]}
             onPress={handleComplete}
+            disabled={!canContinue || isSubmitting}
             accessibilityLabel="Complete setup"
             accessibilityRole="button"
           >
-            <Text style={styles.primaryButtonText}>Complete Setup</Text>
+            <Text style={styles.primaryButtonText}>{isSubmitting ? 'Setting up…' : 'Complete Setup'}</Text>
           </TouchableOpacity>
         ) : (
-          <>
-            <TouchableOpacity
-              style={styles.skipButton}
-              onPress={handleComplete}
-              accessibilityLabel="Skip for now"
-              accessibilityRole="button"
-            >
-              <Text style={styles.skipButtonText}>Skip for now</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.primaryButton} onPress={nextStep} accessibilityLabel="Continue" accessibilityRole="button">
-              <Text style={styles.primaryButtonText}>Continue</Text>
-            </TouchableOpacity>
-          </>
+          <TouchableOpacity
+            style={[styles.primaryButton, !canContinue && styles.primaryButtonDisabled]}
+            onPress={nextStep}
+            disabled={!canContinue}
+            accessibilityLabel="Continue"
+            accessibilityRole="button"
+          >
+            <Text style={styles.primaryButtonText}>Continue</Text>
+          </TouchableOpacity>
         )}
       </View>
     </SafeAreaView>
@@ -144,12 +205,18 @@ const styles = StyleSheet.create({
     color: lightColors.textSecondary,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: spacing.xLarge,
+    paddingVertical: spacing.xLarge,
   },
   stepContainer: {
     alignItems: 'center',
+    width: '100%',
+  },
+  emoji: {
+    fontSize: 52,
+    marginBottom: spacing.medium,
   },
   heading: {
     ...typographyPresets.h1,
@@ -189,6 +256,41 @@ const styles = StyleSheet.create({
     color: lightColors.primary,
     fontWeight: '600',
   },
+  platformSubtext: {
+    fontSize: 12,
+    color: lightColors.textSecondary,
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  form: {
+    width: '100%',
+    maxWidth: 400,
+    gap: spacing.small,
+  },
+  label: {
+    ...typographyPresets.body,
+    color: lightColors.textPrimary,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.medium,
+    paddingVertical: spacing.small,
+    fontSize: 16,
+    color: lightColors.textPrimary,
+    backgroundColor: '#FAFAFA',
+    minHeight: 48,
+  },
+  hint: {
+    fontSize: 12,
+    color: lightColors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.small,
+    lineHeight: 18,
+  },
   buttonRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -218,19 +320,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: spacing.small,
   },
+  primaryButtonDisabled: {
+    opacity: 0.4,
+  },
   primaryButtonText: {
     ...typographyPresets.body,
     color: '#FFFFFF',
     fontWeight: '600',
-  },
-  skipButton: {
-    paddingVertical: spacing.small,
-    paddingHorizontal: spacing.large,
-    minHeight: 48,
-    justifyContent: 'center',
-  },
-  skipButtonText: {
-    ...typographyPresets.body,
-    color: lightColors.textSecondary,
   },
 });

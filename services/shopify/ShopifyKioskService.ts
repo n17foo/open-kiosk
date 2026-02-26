@@ -15,6 +15,7 @@ import { ShopifyProductService } from './ShopifyProductService';
 import { ShopifyCrossSellService } from './ShopifyCrossSellService';
 import { ShopifyCheckoutService } from './ShopifyCheckoutService';
 import { GenericCmsService } from '../cms';
+import { BaseApiClient } from '../utils/BaseApiClient';
 
 export class ShopifyKioskService implements KioskService {
   readonly config: PlatformConfig;
@@ -26,6 +27,8 @@ export class ShopifyKioskService implements KioskService {
   readonly crossSell: CrossSellService;
   readonly cms: CmsService;
   readonly checkout: CheckoutService;
+
+  readonly apiClient: BaseApiClient;
 
   private baseUrl: string;
   private accessToken: string;
@@ -39,6 +42,14 @@ export class ShopifyKioskService implements KioskService {
 
     this.baseUrl = config.baseUrl;
     this.accessToken = config.accessToken;
+
+    this.apiClient = new BaseApiClient({
+      baseUrl: `${this.baseUrl}/api/2023-10`,
+      defaultHeaders: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': this.accessToken,
+      },
+    });
 
     // Initialize service components
     this.auth = new ShopifyAuthService(this.baseUrl, this.accessToken);

@@ -8,8 +8,30 @@ import { useBasket } from '../../context/BasketContext';
 import { useApp } from '../../context/AppContext';
 import { createStyles } from '../../theme/styles';
 import CheckoutProgress from '../../components/ui/CheckoutProgress';
+import { useOrderStatus } from '../../hooks/useOrderStatus';
+import type { OrderStatusPhase } from '../../services/interfaces';
 
 const AUTO_RETURN_SECONDS = 30;
+
+const PHASE_ICONS: Record<OrderStatusPhase, string> = {
+  pending: '⏳',
+  confirmed: '✅',
+  preparing: '👨‍🍳',
+  ready: '🔔',
+  completed: '🎉',
+  cancelled: '❌',
+  refunded: '↩️',
+  error: '⚠️',
+};
+
+function getPhaseIcon(phase: OrderStatusPhase): string {
+  return PHASE_ICONS[phase] ?? '📦';
+}
+
+function formatEta(date: Date): string {
+  const d = date instanceof Date ? date : new Date(date);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
 const ConfirmationScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<KioskFlowParamList>>();
@@ -17,6 +39,7 @@ const ConfirmationScreen: React.FC = () => {
   const { orderId, paymentResult, customerName = 'Valued Customer', customerEmail } = route.params;
   const { clear } = useBasket();
   const { clearSession } = useApp();
+  const { status: orderStatus, isPolling } = useOrderStatus(orderId);
 
   // Auto-return countdown
   const [countdown, setCountdown] = useState(AUTO_RETURN_SECONDS);
@@ -114,13 +137,31 @@ const ConfirmationScreen: React.FC = () => {
             <Text style={styles.orderNumber}>{orderId}</Text>
           </Animated.View>
 
+          {/* Real-time Order Status */}
+          {orderStatus && (
+            <View style={styles.statusBadgeRow}>
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusBadgeIcon}>{getPhaseIcon(orderStatus.phase)}</Text>
+                <Text style={styles.statusBadgeText}>{orderStatus.displayMessage}</Text>
+              </View>
+              {isPolling && <Text style={styles.statusPollingHint}>Updating live...</Text>}
+              {orderStatus.estimatedReadyAt && (
+                <Text style={styles.statusEta}>Estimated ready: {formatEta(orderStatus.estimatedReadyAt)}</Text>
+              )}
+            </View>
+          )}
+
           {/* Instructions */}
           <View style={styles.instructionsCard}>
             <View style={styles.instructionRow}>
               <Text style={styles.instructionIcon}>📦</Text>
               <View style={styles.instructionText}>
-                <Text style={styles.instructionTitle}>Order Processing</Text>
-                <Text style={styles.instructionDesc}>Your order is being processed. You will receive a confirmation email shortly.</Text>
+                <Text style={styles.instructionTitle}>{orderStatus ? orderStatus.displayMessage : 'Order Processing'}</Text>
+                <Text style={styles.instructionDesc}>
+                  {orderStatus
+                    ? `Status: ${orderStatus.phase.charAt(0).toUpperCase() + orderStatus.phase.slice(1)}`
+                    : 'Your order is being processed. You will receive a confirmation email shortly.'}
+                </Text>
               </View>
             </View>
             {paymentResult && (
@@ -379,5 +420,39 @@ const styles = createStyles(t => ({
   footerNote: {
     color: t.colors.textSecondary,
     fontSize: t.typography.base - 2,
+  },
+  statusBadgeRow: {
+    alignItems: 'center',
+    marginBottom: t.spacing.md,
+    gap: t.spacing.xs,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.sm,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.surface,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+    gap: t.spacing.sm,
+  },
+  statusBadgeIcon: {
+    fontSize: 20,
+  },
+  statusBadgeText: {
+    fontSize: t.typography.base,
+    fontWeight: '600',
+    color: t.colors.text,
+  },
+  statusPollingHint: {
+    fontSize: t.typography.base - 2,
+    color: t.colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  statusEta: {
+    fontSize: t.typography.base - 1,
+    color: t.colors.primary,
+    fontWeight: '600',
   },
 }));

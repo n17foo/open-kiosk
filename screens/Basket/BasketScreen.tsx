@@ -16,7 +16,7 @@ const BasketScreen: React.FC = () => {
   const { products } = useCatalog();
 
   const handleContinueShopping = () => navigation.navigate('Products', {});
-  const handleCheckout = () => navigation.navigate('Checkout', {});
+  const handleCheckout = () => navigation.navigate('Checkout');
 
   const handleDecrement = async (productId: string, qty: number) => {
     if (qty <= 1) {

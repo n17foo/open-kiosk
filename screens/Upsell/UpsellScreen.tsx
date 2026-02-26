@@ -16,6 +16,7 @@ const UpsellScreen: React.FC = () => {
   const { addedProductId, addedProductName, basketItemCount } = route.params;
   const { products } = useCatalog();
   const { addItem, basket } = useBasket();
+  const [isAdding, setIsAdding] = React.useState(false);
 
   const addedProduct = useMemo(() => products.find(p => p.id === addedProductId), [products, addedProductId]);
 
@@ -28,13 +29,19 @@ const UpsellScreen: React.FC = () => {
   }, [addedProduct, products]);
 
   const handleAddUpsell = async (product: Product) => {
-    await addItem({
-      productId: product.id,
-      name: product.name,
-      qty: 1,
-      lineTotal: product.price,
-    });
-    navigation.goBack();
+    if (isAdding) return;
+    setIsAdding(true);
+    try {
+      await addItem({
+        productId: product.id,
+        name: product.name,
+        qty: 1,
+        lineTotal: product.price,
+      });
+      navigation.goBack();
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const handleViewBasket = () => {
@@ -80,7 +87,12 @@ const UpsellScreen: React.FC = () => {
                     </Text>
                     <Text style={styles.cardPrice}>{formatMoney(product.price.amount)}</Text>
                   </View>
-                  <TouchableOpacity style={styles.addBtn} onPress={() => handleAddUpsell(product)} activeOpacity={0.8}>
+                  <TouchableOpacity
+                    style={[styles.addBtn, isAdding && { opacity: 0.5 }]}
+                    onPress={() => handleAddUpsell(product)}
+                    disabled={isAdding}
+                    activeOpacity={0.8}
+                  >
                     <Text style={styles.addBtnText}>+ Add to basket</Text>
                   </TouchableOpacity>
                 </View>

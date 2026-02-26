@@ -14,7 +14,7 @@ interface PedManagerProps {
 interface PedState {
   phase: 'detecting' | 'reading' | 'pin_prompt' | 'processing' | 'complete' | 'error';
   message: string;
-  cardData?: any;
+  cardData?: { lastFour: number; cardholderName: string };
   transactionId?: string;
   error?: string;
 }
@@ -211,7 +211,7 @@ export const PedManager: React.FC<PedManagerProps> = ({ paymentMethod, amount, o
   );
 };
 
-const styles = createStyles((t: any) => ({
+const styles = createStyles(t => ({
   container: {
     backgroundColor: t.colors.surface,
     borderRadius: t.radius.xl,

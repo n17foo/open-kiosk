@@ -1,4 +1,7 @@
 import type { CrossSellService, Product, Basket } from '../interfaces';
+import { LoggerFactory } from '../logger/LoggerFactory';
+
+const logger = LoggerFactory.getInstance().createLogger('ShopifyCrossSellService');
 
 export class ShopifyCrossSellService implements CrossSellService {
   constructor(
@@ -66,7 +69,7 @@ export class ShopifyCrossSellService implements CrossSellService {
               description: product.description,
               price: {
                 amount: Math.round(parseFloat(product.variants.edges[0]?.node.price.amount || '0') * 100),
-                currency: product.variants.edges[0]?.node.price.currencyCode === 'GBP' ? 'GBP' : 'GBP',
+                currency: product.variants.edges[0]?.node.price.currencyCode || 'GBP',
               },
               image: product.images.edges[0]?.node.url,
             });
@@ -76,7 +79,7 @@ export class ShopifyCrossSellService implements CrossSellService {
 
       return crossSellProducts;
     } catch (error) {
-      console.error('Failed to fetch Shopify cross-sell products:', error);
+      logger.error({ message: 'Failed to fetch Shopify cross-sell products' }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }

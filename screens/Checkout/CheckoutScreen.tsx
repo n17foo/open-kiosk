@@ -10,9 +10,11 @@ import { createStyles, palette } from '../../theme/styles';
 import { formatMoney } from '../../services/utils';
 import type { CheckoutData, PaymentMethod } from '../../services/interfaces';
 import CheckoutProgress from '../../components/ui/CheckoutProgress';
+import { useLogger } from '../../hooks/useLogger';
 
 const CheckoutScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<KioskFlowParamList>>();
+  const logger = useLogger('CheckoutScreen');
   const { basket, isLoading } = useBasket();
   const { user } = useApp();
   const { service: platformService } = usePlatform();
@@ -79,8 +81,7 @@ const CheckoutScreen: React.FC = () => {
         setSelectedPaymentMethod(checkoutInfo.paymentMethods[0]);
       }
     } catch (error) {
-      // TODO: Replace with logger
-      void error;
+      logger.error({ message: 'Failed to create order' }, error instanceof Error ? error : new Error(String(error)));
       Alert.alert('Error', 'Failed to create order. Please try again.', [{ text: 'OK' }]);
     } finally {
       setIsCreatingDraft(false);
@@ -89,7 +90,10 @@ const CheckoutScreen: React.FC = () => {
   };
 
   const handleProceedToPayment = () => {
-    if (!checkoutData || !selectedPaymentMethod) return;
+    if (!checkoutData || !selectedPaymentMethod) {
+      Alert.alert('Select payment method', 'Please choose how you would like to pay.');
+      return;
+    }
 
     // Navigate to payment screen with draft order, customer details, and selected payment method
     navigation.navigate('Payment', {
@@ -226,7 +230,7 @@ const CheckoutScreen: React.FC = () => {
               <Text style={styles.summaryValue}>{formatMoney(basket.subtotal.amount)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Tax (20%)</Text>
+              <Text style={styles.summaryLabel}>Tax</Text>
               <Text style={styles.summaryValue}>{formatMoney(basket.tax.amount)}</Text>
             </View>
 

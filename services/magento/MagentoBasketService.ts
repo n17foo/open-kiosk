@@ -1,4 +1,7 @@
 import type { BasketService, Basket, BasketLine } from '../interfaces';
+import { LoggerFactory } from '../logger/LoggerFactory';
+
+const logger = LoggerFactory.getInstance().createLogger('MagentoBasketService');
 
 export class MagentoBasketService implements BasketService {
   private basket: Basket = {
@@ -65,8 +68,7 @@ export class MagentoBasketService implements BasketService {
 
   async applyDiscount(code: string): Promise<Basket> {
     // TODO: Implement discount application with Magento cart rules API
-    console.log(`Applying discount code: ${code}`);
-    // For now, just return the current basket
+    logger.debug(`Applying discount code: ${code}`);
     return this.getBasket();
   }
 

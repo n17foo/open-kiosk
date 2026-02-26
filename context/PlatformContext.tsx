@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { KioskService, PlatformConfig } from '../services/interfaces';
 import { serviceFactory } from '../services/ServiceFactory';
 import { LoggerFactory } from '../services/logger/LoggerFactory';
+import { keyValueRepository } from '../repositories/KeyValueRepository';
+import { PLATFORM_CONFIG_KEY } from '../contexts/OnboardingProvider';
 
 const logger = LoggerFactory.getInstance().createLogger('PlatformProvider');
 
@@ -23,7 +25,7 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const initializePlatform = async (platformConfig: PlatformConfig) => {
+  const initializePlatform = useCallback(async (platformConfig: PlatformConfig) => {
     setIsLoading(true);
     setError(null);
 
@@ -40,35 +42,37 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const switchPlatform = async (platformConfig: PlatformConfig) => {
-    // Dispose current service if exists
-    if (service) {
-      try {
-        await service.dispose();
-      } catch {
-        logger.warn('Error disposing current service');
+  const switchPlatform = useCallback(
+    async (platformConfig: PlatformConfig) => {
+      if (service) {
+        try {
+          await service.dispose();
+        } catch {
+          logger.warn('Error disposing current service');
+        }
       }
-    }
+      await initializePlatform(platformConfig);
+    },
+    [service, initializePlatform]
+  );
 
-    await initializePlatform(platformConfig);
-  };
-
-  const resetToDefault = async () => {
+  const resetToDefault = useCallback(async () => {
     const defaultConfig = serviceFactory.getDefaultConfig();
     await switchPlatform(defaultConfig);
-  };
+  }, [switchPlatform]);
 
-  // Initialize with default platform on mount
+  // On mount: load saved PlatformConfig from onboarding, fall back to inmemory default
   useEffect(() => {
-    const initDefault = async () => {
-      const defaultConfig = serviceFactory.getDefaultConfig();
-      await initializePlatform(defaultConfig);
+    const initSaved = async () => {
+      const saved = await keyValueRepository.getObject<PlatformConfig>(PLATFORM_CONFIG_KEY);
+      const configToUse = saved ?? serviceFactory.getDefaultConfig();
+      await initializePlatform(configToUse);
     };
 
-    void initDefault();
-  }, []);
+    void initSaved();
+  }, [initializePlatform]);
 
   const value = useMemo<PlatformContextValue>(
     () => ({
@@ -80,7 +84,7 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       switchPlatform,
       resetToDefault,
     }),
-    [service, config, isLoading, error]
+    [service, config, isLoading, error, initializePlatform, switchPlatform, resetToDefault]
   );
 
   return <PlatformContext.Provider value={value}>{children}</PlatformContext.Provider>;

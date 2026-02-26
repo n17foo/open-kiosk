@@ -48,11 +48,3 @@ export class InMemoryKioskService implements KioskService {
     // No cleanup needed for in-memory service
   }
 }
-
-// Legacy compatibility - create default instance
-const defaultConfig: PlatformConfig = {
-  type: 'inmemory',
-  name: 'In-Memory Demo',
-};
-
-export const kioskService = new InMemoryKioskService(defaultConfig);

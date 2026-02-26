@@ -1,4 +1,7 @@
 import type { ProductService, Product } from '../interfaces';
+import { LoggerFactory } from '../logger/LoggerFactory';
+
+const logger = LoggerFactory.getInstance().createLogger('MagentoProductService');
 
 interface MagentoProduct {
   id: number;
@@ -64,7 +67,7 @@ export class MagentoProductService implements ProductService {
         image: this.getProductImage(product),
       };
     } catch (error) {
-      console.error('Failed to fetch Magento product:', error);
+      logger.error({ message: 'Failed to fetch Magento product' }, error instanceof Error ? error : new Error(String(error)));
       return undefined;
     }
   }
@@ -81,7 +84,7 @@ export class MagentoProductService implements ProductService {
       }
       return products;
     } catch (error) {
-      console.error('Failed to fetch Magento products by IDs:', error);
+      logger.error({ message: 'Failed to fetch Magento products by IDs' }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -104,7 +107,7 @@ export class MagentoProductService implements ProductService {
         image: this.getProductImage(variant),
       }));
     } catch (error) {
-      console.error('Failed to fetch Magento product variants:', error);
+      logger.error({ message: 'Failed to fetch Magento product variants' }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -136,7 +139,10 @@ export class MagentoProductService implements ProductService {
               image: this.getProductImage(product),
             });
           } catch (error) {
-            console.error(`Failed to fetch upsell product ${upsell.sku}:`, error);
+            logger.error(
+              { message: `Failed to fetch upsell product ${upsell.sku}` },
+              error instanceof Error ? error : new Error(String(error))
+            );
           }
         }
 
@@ -164,7 +170,10 @@ export class MagentoProductService implements ProductService {
               image: this.getProductImage(product),
             });
           } catch (error) {
-            console.error(`Failed to fetch related product ${relatedProduct.sku}:`, error);
+            logger.error(
+              { message: `Failed to fetch related product ${relatedProduct.sku}` },
+              error instanceof Error ? error : new Error(String(error))
+            );
           }
         }
 
@@ -173,7 +182,10 @@ export class MagentoProductService implements ProductService {
 
       return [];
     } catch (error) {
-      console.error('Failed to fetch Magento upsell recommendations:', error);
+      logger.error(
+        { message: 'Failed to fetch Magento upsell recommendations' },
+        error instanceof Error ? error : new Error(String(error))
+      );
       return [];
     }
   }

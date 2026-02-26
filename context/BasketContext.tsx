@@ -20,18 +20,18 @@ const BasketProviderInner: React.FC<{ children: React.ReactNode }> = ({ children
   const [basket, setBasket] = useState<Basket>(createEmptyBasket());
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     if (!service) return;
 
     setIsLoading(true);
     const data = await service.basket.getBasket();
     setBasket(data);
     setIsLoading(false);
-  };
+  }, [service]);
 
   useEffect(() => {
     void refresh();
-  }, [service]);
+  }, [refresh]);
 
   const addItem = useCallback(
     async (line: BasketLine) => {

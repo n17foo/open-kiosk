@@ -2,7 +2,6 @@ import type { PaymentMethod } from '../services/interfaces';
 
 export type RootStackParamList = {
   Onboarding: undefined;
-  Login: undefined;
   Main: undefined;
 };
 
@@ -38,9 +37,7 @@ export type KioskFlowParamList = {
     searchQuery?: string;
   };
   Basket: undefined;
-  Checkout: {
-    draftOrderId?: string;
-  };
+  Checkout: undefined;
   Payment: {
     draftOrderId: string;
     customerName?: string;

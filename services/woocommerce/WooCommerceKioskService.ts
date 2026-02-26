@@ -15,6 +15,7 @@ import { WooCommerceProductService } from './WooCommerceProductService';
 import { WooCommerceCrossSellService } from './WooCommerceCrossSellService';
 import { WooCommerceCheckoutService } from './WooCommerceCheckoutService';
 import { GenericCmsService } from '../cms';
+import { BaseApiClient } from '../utils/BaseApiClient';
 
 export class WooCommerceKioskService implements KioskService {
   readonly config: PlatformConfig;
@@ -26,6 +27,8 @@ export class WooCommerceKioskService implements KioskService {
   readonly crossSell: CrossSellService;
   readonly cms: CmsService;
   readonly checkout: CheckoutService;
+
+  readonly apiClient: BaseApiClient;
 
   private baseUrl: string;
   private consumerKey: string;
@@ -41,6 +44,15 @@ export class WooCommerceKioskService implements KioskService {
     this.baseUrl = config.baseUrl;
     this.consumerKey = config.apiKey;
     this.consumerSecret = config.apiSecret;
+
+    const auth = btoa(`${this.consumerKey}:${this.consumerSecret}`);
+    this.apiClient = new BaseApiClient({
+      baseUrl: `${this.baseUrl}/wp-json/wc/v3`,
+      defaultHeaders: {
+        'Content-Type': 'application/json',
+        Authorization: `Basic ${auth}`,
+      },
+    });
 
     // Initialize service components
     this.auth = new WooCommerceAuthService(this.baseUrl, this.consumerKey, this.consumerSecret);

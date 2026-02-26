@@ -1,4 +1,7 @@
 import type { CatalogService, Category, KioskCatalog, Product } from '../interfaces';
+import { LoggerFactory } from '../logger/LoggerFactory';
+
+const logger = LoggerFactory.getInstance().createLogger('MagentoCatalogService');
 
 interface MagentoCategory {
   id: number;
@@ -76,7 +79,7 @@ export class MagentoCatalogService implements CatalogService {
         image: this.getCategoryImage(category),
       }));
     } catch (error) {
-      console.error('Failed to fetch Magento categories:', error);
+      logger.error({ message: 'Failed to fetch Magento categories' }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -102,13 +105,13 @@ export class MagentoCatalogService implements CatalogService {
         name: product.name,
         description: this.getProductDescription(product),
         price: {
-          amount: Math.round(product.price * 100), // Convert to cents
-          currency: 'GBP', // Assuming GBP, can be made configurable
+          amount: Math.round(product.price * 100),
+          currency: 'GBP',
         },
         image: this.getProductImage(product),
       }));
     } catch (error) {
-      console.error('Failed to fetch Magento products:', error);
+      logger.error({ message: 'Failed to fetch Magento products' }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -130,7 +133,7 @@ export class MagentoCatalogService implements CatalogService {
         image: this.getProductImage(product),
       };
     } catch (error) {
-      console.error('Failed to fetch Magento product:', error);
+      logger.error({ message: 'Failed to fetch Magento product' }, error instanceof Error ? error : new Error(String(error)));
       return undefined;
     }
   }
@@ -154,7 +157,7 @@ export class MagentoCatalogService implements CatalogService {
         image: this.getProductImage(product),
       }));
     } catch (error) {
-      console.error('Failed to search Magento products:', error);
+      logger.error({ message: 'Failed to search Magento products' }, error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }

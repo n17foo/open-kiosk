@@ -4,62 +4,22 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { Screen } from '../../components/Screen';
 import { KioskButton } from '../../components/KioskButton';
-import { usePlatform } from '../../hooks';
+import { usePlatform } from '../../context/PlatformContext';
 import type { RootStackParamList } from '../../navigation/types';
 import type { PlatformType, PlatformConfig } from '../../services/interfaces';
 import { createStyles } from '../../theme/styles';
 
-const PLATFORM_OPTIONS: { type: PlatformType; name: string; description: string }[] = [
-  {
-    type: 'inmemory',
-    name: 'In-Memory Demo',
-    description: 'Use mock data for testing and development',
-  },
-  {
-    type: 'shopify',
-    name: 'Shopify',
-    description: 'Connect to a Shopify store',
-  },
-  {
-    type: 'woocommerce',
-    name: 'WooCommerce',
-    description: 'Connect to a WooCommerce store',
-  },
-  {
-    type: 'magento',
-    name: 'Magento',
-    description: 'Connect to a Magento store',
-  },
-  {
-    type: 'bigcommerce',
-    name: 'BigCommerce',
-    description: 'Connect to a BigCommerce store',
-  },
-  {
-    type: 'sylius',
-    name: 'Sylius',
-    description: 'Connect to a Sylius store',
-  },
-  {
-    type: 'wix',
-    name: 'Wix',
-    description: 'Connect to a Wix store',
-  },
-  {
-    type: 'prestashop',
-    name: 'PrestaShop',
-    description: 'Connect to a PrestaShop store',
-  },
-  {
-    type: 'squarespace',
-    name: 'Squarespace',
-    description: 'Connect to a Squarespace store',
-  },
-  {
-    type: 'custom',
-    name: 'Custom Integration',
-    description: 'Connect to a custom ecommerce platform',
-  },
+const PLATFORM_OPTIONS: { type: PlatformType; name: string; description: string; available: boolean }[] = [
+  { type: 'inmemory', name: 'In-Memory Demo', description: 'Use mock data for testing and development', available: true },
+  { type: 'shopify', name: 'Shopify', description: 'Connect to a Shopify store', available: true },
+  { type: 'woocommerce', name: 'WooCommerce', description: 'Connect to a WooCommerce store', available: true },
+  { type: 'magento', name: 'Magento', description: 'Connect to a Magento store', available: true },
+  { type: 'bigcommerce', name: 'BigCommerce', description: 'Connect to a BigCommerce store', available: true },
+  { type: 'sylius', name: 'Sylius', description: 'Connect to a Sylius store', available: true },
+  { type: 'wix', name: 'Wix', description: 'Connect to a Wix store', available: true },
+  { type: 'prestashop', name: 'PrestaShop', description: 'Connect to a PrestaShop store', available: true },
+  { type: 'squarespace', name: 'Squarespace', description: 'Connect to a Squarespace store', available: true },
+  { type: 'custom', name: 'Custom Integration', description: 'Connect to a custom ecommerce platform', available: false },
 ];
 
 const PAYMENT_PROCESSORS = [
@@ -94,8 +54,10 @@ const PlatformSetupScreen: React.FC = () => {
   const [config, setConfig] = useState<Partial<PlatformConfig>>({});
 
   const handlePlatformSelect = (platformType: PlatformType) => {
+    const option = PLATFORM_OPTIONS.find(p => p.type === platformType);
+    if (!option?.available) return;
     setSelectedPlatform(platformType);
-    setConfig({ type: platformType, name: PLATFORM_OPTIONS.find(p => p.type === platformType)?.name || '' });
+    setConfig({ type: platformType, name: option.name });
   };
 
   const handlePaymentProcessorSelect = (processorType: 'stripe' | 'square' | 'adyen' | 'mock') => {
@@ -369,13 +331,24 @@ const PlatformSetupScreen: React.FC = () => {
           {PLATFORM_OPTIONS.map(platform => (
             <TouchableOpacity
               key={platform.type}
-              style={[styles.platformOption, selectedPlatform === platform.type && styles.selectedPlatform]}
+              style={[
+                styles.platformOption,
+                selectedPlatform === platform.type && styles.selectedPlatform,
+                !platform.available && styles.platformDisabled,
+              ]}
               onPress={() => handlePlatformSelect(platform.type)}
+              disabled={!platform.available}
+              activeOpacity={platform.available ? 0.7 : 1}
             >
               <View style={styles.platformInfo}>
-                <Text style={styles.platformName}>{platform.name}</Text>
+                <Text style={[styles.platformName, !platform.available && styles.platformNameDisabled]}>{platform.name}</Text>
                 <Text style={styles.platformDescription}>{platform.description}</Text>
               </View>
+              {!platform.available && (
+                <View style={styles.comingSoonBadge}>
+                  <Text style={styles.comingSoonText}>Soon</Text>
+                </View>
+              )}
               {selectedPlatform === platform.type && <Text style={styles.checkmark}>✓</Text>}
             </TouchableOpacity>
           ))}
@@ -479,6 +452,28 @@ const styles = createStyles(t => ({
     color: t.colors.primary,
     fontSize: t.typography.heading,
     fontWeight: 'bold',
+  },
+  platformDisabled: {
+    opacity: 0.5,
+  },
+  platformNameDisabled: {
+    color: t.colors.textSecondary,
+  },
+  comingSoonBadge: {
+    paddingHorizontal: t.spacing.sm,
+    paddingVertical: 3,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.muted,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+    marginRight: t.spacing.sm,
+  },
+  comingSoonText: {
+    color: t.colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   configSection: {
     marginBottom: t.spacing.xl,

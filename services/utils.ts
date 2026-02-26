@@ -1,6 +1,8 @@
 import type { Basket, BasketLine, Money } from './types';
 
-const makeMoney = (amount = 0): Money => ({ amount, currency: 'GBP' });
+const DEFAULT_CURRENCY = 'GBP';
+
+const makeMoney = (amount = 0, currency = DEFAULT_CURRENCY): Money => ({ amount, currency });
 
 const calculateTotals = (lines: BasketLine[]) => {
   const subtotal = lines.reduce((sum, line) => sum + line.lineTotal.amount, 0);
@@ -28,4 +30,5 @@ export const withUpdatedTotals = (basket: Basket): Basket => ({
   ...calculateTotals(basket.lines),
 });
 
-export const formatMoney = (amount: number) => `£${(amount / 100).toFixed(2)}`;
+export const formatMoney = (amount: number, currency = DEFAULT_CURRENCY): string =>
+  new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(amount / 100);

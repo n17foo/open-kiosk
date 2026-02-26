@@ -23,7 +23,7 @@ export const useAuth = () => {
 
       void checkAuth();
     }
-  }, [service]);
+  }, [service, logger]);
 
   const login = async (username: string, password: string) => {
     if (!service) throw new Error('No platform service available');

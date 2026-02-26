@@ -1,4 +1,7 @@
 import type { Money } from './types';
+import { LoggerFactory } from './logger/LoggerFactory';
+
+const logger = LoggerFactory.getInstance().createLogger('PaymentService');
 
 export interface PaymentMethod {
   type: 'card' | 'cash' | 'apple_pay' | 'google_pay';
@@ -59,10 +62,10 @@ export class SquarePaymentService implements PaymentService {
       // In a real implementation, this would initialize the Square Terminal SDK
       // For now, simulate terminal connection
       await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Square Terminal initialized');
+      logger.info('Square Terminal initialized');
       return true;
     } catch (error) {
-      console.error('Failed to initialize Square Terminal:', error);
+      logger.error({ message: 'Failed to initialize Square Terminal' }, error instanceof Error ? error : new Error(String(error)));
       return false;
     }
   }
@@ -244,10 +247,10 @@ export class AdyenPaymentService implements PaymentService {
     try {
       // In a real implementation, this would initialize the Adyen Terminal SDK
       await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Adyen Terminal initialized');
+      logger.info('Adyen Terminal initialized');
       return true;
     } catch (error) {
-      console.error('Failed to initialize Adyen Terminal:', error);
+      logger.error({ message: 'Failed to initialize Adyen Terminal' }, error instanceof Error ? error : new Error(String(error)));
       return false;
     }
   }
@@ -554,14 +557,18 @@ export class MockPaymentService implements PaymentService {
 
 // Payment service factory
 export class PaymentServiceFactory {
-  static createService(type: 'stripe' | 'square' | 'adyen' | 'cash' | 'mock', config?: any): PaymentService {
+  static createService(type: 'stripe' | 'square' | 'adyen' | 'cash' | 'mock', config?: Record<string, unknown>): PaymentService {
     switch (type) {
       case 'stripe':
-        return new StripePaymentService(config?.apiKey, config?.publishableKey);
+        return new StripePaymentService(config?.apiKey as string, config?.publishableKey as string | undefined);
       case 'square':
-        return new SquarePaymentService(config?.applicationId, config?.accessToken, config?.locationId);
+        return new SquarePaymentService(config?.applicationId as string, config?.accessToken as string, config?.locationId as string);
       case 'adyen':
-        return new AdyenPaymentService(config?.apiKey, config?.merchantAccount, config?.terminalId);
+        return new AdyenPaymentService(
+          config?.apiKey as string,
+          config?.merchantAccount as string,
+          config?.terminalId as string | undefined
+        );
       case 'cash':
         return new CashPaymentService();
       case 'mock':

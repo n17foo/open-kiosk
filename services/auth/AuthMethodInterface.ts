@@ -1,4 +1,4 @@
-export type AuthMethodType = 'pin' | 'biometric' | 'password' | 'platform' | 'kiosk_pin';
+export type AuthMethodType = 'pin' | 'biometric' | 'password' | 'kiosk_pin';
 
 export type AuthMode = 'online' | 'offline';
 
@@ -39,11 +39,6 @@ export const AUTH_METHOD_INFO: Record<AuthMethodType, AuthMethodInfo> = {
     description: 'Enter your username and password',
     icon: 'lock-closed',
   },
-  platform: {
-    label: 'Platform Login',
-    description: 'Sign in with your e-commerce platform account',
-    icon: 'globe',
-  },
   kiosk_pin: {
     label: 'Admin PIN',
     description: 'Enter the kiosk admin PIN for configuration access',
@@ -51,9 +46,6 @@ export const AUTH_METHOD_INFO: Record<AuthMethodType, AuthMethodInfo> = {
   },
 };
 
-export function getAuthMethodsForMode(mode: AuthMode): AuthMethodType[] {
-  if (mode === 'offline') {
-    return ['pin', 'biometric', 'password', 'kiosk_pin'];
-  }
-  return ['platform', 'pin', 'biometric', 'password', 'kiosk_pin'];
+export function getAuthMethodsForMode(_mode: AuthMode): AuthMethodType[] {
+  return ['pin', 'biometric', 'password', 'kiosk_pin'];
 }
